@@ -20,3 +20,33 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user} ({self.role})"
+    
+class LeaveType(models.Model):
+    name = models.CharField(max_length=40)
+    default_allocation_days = models.DecimalField(max_digits=5, decimal_places=2)
+    accrual_per_month = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    paid = models.BooleanField(default=True)
+    requires_approval = models.BooleanField(default=True)
+    max_carry_over_days = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    def __str__(self):
+        return self.name
+
+
+class LeaveBalance(models.Model):
+    employee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="balances"
+    )
+    leave_type = models.ForeignKey(LeaveType, on_delete=models.CASCADE)
+    year = models.PositiveIntegerField()
+    accrued = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    used = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    pending = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    carried_over = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    class Meta:
+        unique_together = ("employee", "leave_type", "year")
+
+    @property
+    def remaining(self):
+        return self.accrued + self.carried_over - self.used - self.pending
