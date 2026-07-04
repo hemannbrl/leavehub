@@ -1,7 +1,11 @@
 # leavehub
 
+![CI](https://github.com/hemannbrl/leavehub/actions/workflows/ci.yml/badge.svg)
+
 Leave management API. Employees request time off against a balance; a manager approves
 or rejects requests; HR configures leave types, allocations, and holidays.
+
+The API is versioned under `/api/v1/`, paginated, and rate-limited.
 
 ## Features
 
@@ -56,40 +60,70 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-API at http://localhost:8000/, admin at `/admin/`, interactive docs at `/api/docs/`.
+API at http://localhost:8000/, admin at `/admin/`, interactive docs at `/api/v1/docs/`.
 
-To exercise the API: register at `/api/auth/register/`, get a JWT at `/api/auth/token/`,
-then open `/api/docs/`, click **Authorize**, and paste the access token. (`docs/TOOLS.md` has
+To exercise the API: register at `/api/v1/auth/register/`, get a JWT at `/api/v1/auth/token/`,
+then open `/api/v1/docs/`, click **Authorize**, and paste the access token. (`docs/TOOLS.md` has
 a one-line curl token helper.)
 
 ## Running Tests
 
 ```bash
 python manage.py test
+
+# with coverage (fails under 85%)
+coverage run manage.py test && coverage report
 ```
+
+Linting is ruff, run via pre-commit and in CI:
+
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+ruff check . && ruff format --check .
+```
+
+## Deployment
+
+The app serves under gunicorn with WhiteNoise for static files, and ships a `Dockerfile`.
+
+```bash
+docker build -t leavehub .
+# at deploy time (needs env + DB):
+#   python manage.py migrate && python manage.py collectstatic --noinput
+#   gunicorn leavehub.wsgi:application --bind 0.0.0.0:8000
+```
+
+Before going live, set `DJANGO_DEBUG=False`, real `DJANGO_ALLOWED_HOSTS`, and HTTPS-related
+env vars (`DJANGO_SECURE_SSL_REDIRECT=True`, `DJANGO_HSTS_SECONDS`), then confirm a clean
+`DJANGO_DEBUG=False python manage.py check --deploy`.
+
+The accrual and carry-over jobs are scheduled, not request-driven — see
+`deploy/crontab.example` (monthly `accrue_leave`, year-end `carry_over`), or register the same
+two management commands with your platform's scheduler.
 
 ## API Endpoints
 
 ```
-POST   /api/auth/register/                register a user
-POST   /api/auth/token/                   obtain JWT
-POST   /api/auth/token/refresh/           refresh JWT
+POST   /api/v1/auth/register/                register a user
+POST   /api/v1/auth/token/                   obtain JWT
+POST   /api/v1/auth/token/refresh/           refresh JWT
 
-GET    /api/leave-types/                  list (hr creates/edits)
-POST   /api/leave-types/                  create (hr)
+GET    /api/v1/leave-types/                  list (hr creates/edits)
+POST   /api/v1/leave-types/                  create (hr)
 
-GET    /api/me/balances/                  current user's balances
-GET    /api/calendar/                     team calendar (date-range filtered)
-GET    /api/leave-requests/               list (role-filtered)
-POST   /api/leave-requests/               create
-GET    /api/leave-requests/{id}/          retrieve
+GET    /api/v1/me/balances/                  current user's balances
+GET    /api/v1/calendar/                     team calendar (date-range filtered)
+GET    /api/v1/leave-requests/               list (role-filtered)
+POST   /api/v1/leave-requests/               create
+GET    /api/v1/leave-requests/{id}/          retrieve
 
-POST   /api/leave-requests/{id}/approve/  -> approved
-POST   /api/leave-requests/{id}/reject/   -> rejected
-POST   /api/leave-requests/{id}/cancel/   -> cancelled
+POST   /api/v1/leave-requests/{id}/approve/  -> approved
+POST   /api/v1/leave-requests/{id}/reject/   -> rejected
+POST   /api/v1/leave-requests/{id}/cancel/   -> cancelled
 
-GET    /api/schema/                       OpenAPI schema
-GET    /api/docs/                         Swagger UI
+GET    /api/v1/schema/                       OpenAPI schema
+GET    /api/v1/docs/                         Swagger UI
 ```
 
 ## What I Learned

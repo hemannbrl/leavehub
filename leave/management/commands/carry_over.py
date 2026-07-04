@@ -15,7 +15,9 @@ class Command(BaseCommand):
             carry = min(bal.remaining, lt.max_carry_over_days)
             starting = 0 if lt.accrual_per_month else lt.default_allocation_days
             LeaveBalance.objects.update_or_create(
-                employee=bal.employee, leave_type=lt, year=year + 1,
+                employee=bal.employee,
+                leave_type=lt,
+                year=year + 1,
                 defaults={"carried_over": carry, "accrued": starting},
             )
         self.stdout.write("carry-over done")

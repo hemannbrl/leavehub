@@ -1,0 +1,15 @@
+# leavehub scheduled jobs (ENGINEERING.md §10)
+# The accrual and carry-over commands are not request-driven — run them on a schedule.
+# Install on the server with:  crontab deploy/crontab.example
+# On a PaaS, register the same two commands with its scheduler (Render/Railway cron, a
+# scheduled GitHub Action, etc.) instead of this file.
+#
+# Adjust PROJECT_DIR / the venv path to match the deploy environment.
+
+PROJECT_DIR=/app
+
+# Grant monthly accrual — 00:10 on the 1st of every month
+10 0 1 * * cd $PROJECT_DIR && python manage.py accrue_leave >> /var/log/leavehub-accrue.log 2>&1
+
+# Roll unused balance into next year — 00:30 on Jan 1
+30 0 1 1 * cd $PROJECT_DIR && python manage.py carry_over >> /var/log/leavehub-carryover.log 2>&1

@@ -7,5 +7,5 @@ User = get_user_model()
 class SchemaTests(APITestCase):
     def test_schema_endpoint_ok(self):
         self.client.force_authenticate(User.objects.create_user("s", password="x"))
-        r = self.client.get("/api/schema/")
+        r = self.client.get("/api/v1/schema/")
         self.assertEqual(r.status_code, 200)

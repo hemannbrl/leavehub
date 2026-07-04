@@ -9,7 +9,7 @@ from leave.models import Holiday
 class WorkingDaysTests(TestCase):
     def setUp(self):
         self.monday = date(2026, 6, 1)
-        while self.monday.weekday() != 0:        # find a real Monday
+        while self.monday.weekday() != 0:  # find a real Monday
             self.monday += timedelta(days=1)
         self.sunday = self.monday + timedelta(days=6)
 

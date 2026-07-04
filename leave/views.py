@@ -21,13 +21,19 @@ class RegisterView(generics.CreateAPIView):
 
 # create / list / retrieve only — a request changes via the approve/reject/cancel actions
 # (Phase 6), never a plain PATCH/PUT/DELETE that would bypass the balance math.
-class LeaveRequestViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
-                          mixins.ListModelMixin, viewsets.GenericViewSet):
+class LeaveRequestViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
     serializer_class = LeaveRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
+        user = getattr(self.request, "user", None)
+        if user is None or not user.is_authenticated:
+            return LeaveRequest.objects.none()  # schema generation / anonymous
         r = role(user)
         if r == "hr":
             return LeaveRequest.objects.all()
@@ -103,7 +109,7 @@ class CalendarView(generics.ListAPIView):
             return qs
         team = self.request.user.profile.team
         if not team:
-            return qs.none()              # no team set -> show nothing rather than everyone
+            return qs.none()  # no team set -> show nothing rather than everyone
         return qs.filter(employee__profile__team=team)
 
 

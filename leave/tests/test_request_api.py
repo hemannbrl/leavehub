@@ -18,7 +18,7 @@ class RequestApiTests(APITestCase):
         self.employee.profile.save()
         self.lt = LeaveType.objects.create(name="annual", default_allocation_days=20)
         self.start = date.today() + timedelta(days=7)
-        while self.start.weekday() != 0:          # a future Monday
+        while self.start.weekday() != 0:  # a future Monday
             self.start += timedelta(days=1)
         self.end = self.start + timedelta(days=4)  # Mon-Fri = 5 working days
         self.bal = LeaveBalance.objects.create(
@@ -27,9 +27,14 @@ class RequestApiTests(APITestCase):
 
     def _create_request(self):
         self.client.force_authenticate(self.employee)
-        return self.client.post("/api/leave-requests/", {
-            "leave_type": self.lt.id, "start_date": self.start, "end_date": self.end,
-        })
+        return self.client.post(
+            "/api/v1/leave-requests/",
+            {
+                "leave_type": self.lt.id,
+                "start_date": self.start,
+                "end_date": self.end,
+            },
+        )
 
     def test_overlapping_request_is_rejected(self):
         self.assertEqual(self._create_request().status_code, 201)
@@ -38,21 +43,26 @@ class RequestApiTests(APITestCase):
     def test_past_dated_request_is_rejected(self):
         self.client.force_authenticate(self.employee)
         past = date.today() - timedelta(days=3)
-        r = self.client.post("/api/leave-requests/", {
-            "leave_type": self.lt.id, "start_date": past, "end_date": past + timedelta(days=1),
-        })
+        r = self.client.post(
+            "/api/v1/leave-requests/",
+            {
+                "leave_type": self.lt.id,
+                "start_date": past,
+                "end_date": past + timedelta(days=1),
+            },
+        )
         self.assertEqual(r.status_code, 400)
 
     def test_employee_cannot_approve(self):
         req_id = self._create_request().data["id"]
         # still authenticated as the employee, who has no approval rights
-        resp = self.client.post(f"/api/leave-requests/{req_id}/approve/")
+        resp = self.client.post(f"/api/v1/leave-requests/{req_id}/approve/")
         self.assertEqual(resp.status_code, 403)
 
     def test_manager_can_approve(self):
         req_id = self._create_request().data["id"]
         self.client.force_authenticate(self.manager)
-        resp = self.client.post(f"/api/leave-requests/{req_id}/approve/")
+        resp = self.client.post(f"/api/v1/leave-requests/{req_id}/approve/")
         self.assertEqual(resp.status_code, 200)
         self.bal.refresh_from_db()
         self.assertEqual(self.bal.used, 5)
@@ -62,13 +72,13 @@ class RequestApiTests(APITestCase):
         req_id = self._create_request().data["id"]
         LeaveRequest.objects.get(id=req_id).approve(actor=self.manager)
         self.client.force_authenticate(self.employee)
-        resp = self.client.post(f"/api/leave-requests/{req_id}/cancel/")
+        resp = self.client.post(f"/api/v1/leave-requests/{req_id}/cancel/")
         self.assertEqual(resp.status_code, 200)
         self.bal.refresh_from_db()
         self.assertEqual(self.bal.used, 0)
 
     def test_manager_cannot_cancel(self):
         req_id = self._create_request().data["id"]
-        self.client.force_authenticate(self.manager)   # can see it, but may not withdraw it
-        resp = self.client.post(f"/api/leave-requests/{req_id}/cancel/")
+        self.client.force_authenticate(self.manager)  # can see it, but may not withdraw it
+        resp = self.client.post(f"/api/v1/leave-requests/{req_id}/cancel/")
         self.assertEqual(resp.status_code, 403)

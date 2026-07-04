@@ -14,14 +14,19 @@ class TransitionTests(TestCase):
         self.manager = User.objects.create_user("mgr", password="x")
         self.lt = LeaveType.objects.create(name="annual", default_allocation_days=20)
         self.bal = LeaveBalance.objects.create(
-            employee=self.employee, leave_type=self.lt, year=date.today().year,
-            accrued=20, pending=2,
+            employee=self.employee,
+            leave_type=self.lt,
+            year=date.today().year,
+            accrued=20,
+            pending=2,
         )
         self.req = LeaveRequest.objects.create(
-            employee=self.employee, leave_type=self.lt,
+            employee=self.employee,
+            leave_type=self.lt,
             start_date=date.today() + timedelta(days=3),
             end_date=date.today() + timedelta(days=4),
-            days=2, status="pending",
+            days=2,
+            status="pending",
         )
 
     def test_approve_moves_pending_to_used(self):

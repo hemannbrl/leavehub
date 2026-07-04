@@ -39,17 +39,20 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
         employee = self.context["request"].user
         try:
             balance = LeaveBalance.objects.get(
-                employee=employee, leave_type=data["leave_type"],
+                employee=employee,
+                leave_type=data["leave_type"],
                 year=data["start_date"].year,
             )
         except LeaveBalance.DoesNotExist:
-            raise serializers.ValidationError("no balance for that leave type/year")
+            raise serializers.ValidationError("no balance for that leave type/year") from None
         if balance.remaining < days:
             raise serializers.ValidationError("not enough balance")
 
         overlap = LeaveRequest.objects.filter(
-            employee=employee, status__in=["pending", "approved"],
-            start_date__lte=data["end_date"], end_date__gte=data["start_date"],
+            employee=employee,
+            status__in=["pending", "approved"],
+            start_date__lte=data["end_date"],
+            end_date__gte=data["start_date"],
         ).exists()
         if overlap:
             raise serializers.ValidationError("overlaps an existing request")
@@ -64,8 +67,14 @@ class LeaveBalanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = LeaveBalance
         fields = (
-            "id", "leave_type", "year",
-            "accrued", "used", "pending", "carried_over", "remaining",
+            "id",
+            "leave_type",
+            "year",
+            "accrued",
+            "used",
+            "pending",
+            "carried_over",
+            "remaining",
         )
 
 

@@ -13,7 +13,12 @@ class BalanceTests(TestCase):
         user = User.objects.create_user("e", password="x")
         lt = LeaveType.objects.create(name="annual", default_allocation_days=20)
         bal = LeaveBalance.objects.create(
-            employee=user, leave_type=lt, year=date.today().year,
-            accrued=20, carried_over=5, used=4, pending=1,
+            employee=user,
+            leave_type=lt,
+            year=date.today().year,
+            accrued=20,
+            carried_over=5,
+            used=4,
+            pending=1,
         )
         self.assertEqual(bal.remaining, 20)

@@ -8,6 +8,8 @@ venv/
 db.sqlite3
 *.log
 staticfiles/
+htmlcov/
+.coverage
 
 .idea/
 .vscode/

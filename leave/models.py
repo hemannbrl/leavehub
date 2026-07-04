@@ -20,14 +20,18 @@ class Profile(models.Model):
     )
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.EMPLOYEE)
     manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="reports",
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reports",
     )
     team = models.CharField(max_length=80, blank=True)
 
     def __str__(self):
         return f"{self.user} ({self.role})"
-    
+
+
 class LeaveType(models.Model):
     name = models.CharField(max_length=40)
     default_allocation_days = models.DecimalField(max_digits=5, decimal_places=2)
@@ -35,6 +39,9 @@ class LeaveType(models.Model):
     paid = models.BooleanField(default=True)
     requires_approval = models.BooleanField(default=True)
     max_carry_over_days = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ("name",)
 
     def __str__(self):
         return self.name
@@ -53,11 +60,16 @@ class LeaveBalance(models.Model):
 
     class Meta:
         unique_together = ("employee", "leave_type", "year")
+        ordering = ("-year", "leave_type_id")
+
+    def __str__(self):
+        return f"{self.employee} {self.leave_type} {self.year}"
 
     @property
     def remaining(self) -> Decimal:
         return self.accrued + self.carried_over - self.used - self.pending
-    
+
+
 class Holiday(models.Model):
     date = models.DateField(unique=True)
     name = models.CharField(max_length=80)
@@ -83,13 +95,22 @@ class LeaveRequest(models.Model):
     reason = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     approver = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="leave_decisions",
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="leave_decisions",
     )
     decision_note = models.TextField(blank=True)
     decided_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.employee} {self.leave_type} {self.start_date} ({self.status})"
 
     def _balance(self):
         return LeaveBalance.objects.select_for_update().get(

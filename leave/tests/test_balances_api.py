@@ -16,7 +16,8 @@ class BalancesEndpointTests(APITestCase):
             employee=user, leave_type=lt, year=date.today().year, accrued=20
         )
         self.client.force_authenticate(user)
-        r = self.client.get("/api/me/balances/")
+        r = self.client.get("/api/v1/me/balances/")
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(len(r.data), 1)
-        self.assertEqual(float(r.data[0]["remaining"]), 20.0)   # number, not a string
+        results = r.data["results"]  # paginated response
+        self.assertEqual(len(results), 1)
+        self.assertEqual(float(results[0]["remaining"]), 20.0)  # number, not a string
