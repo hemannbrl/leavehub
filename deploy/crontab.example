@@ -1,4 +1,4 @@
-# leavehub scheduled jobs (ENGINEERING.md §10)
+# leavehub scheduled jobs
 # The accrual and carry-over commands are not request-driven — run them on a schedule.
 # Install on the server with:  crontab deploy/crontab.example
 # On a PaaS, register the same two commands with its scheduler (Render/Railway cron, a

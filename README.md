@@ -72,8 +72,9 @@ its working-day count excludes weekends and holidays, and its status transitions
 math tied to each transition — is enforced in one place. `perform_create` re-checks the
 balance under a row lock to close a submit-time race the serializer can't. Accrual and
 carry-over run outside the request cycle as management commands. See
-[`docs/DESIGN.md`](docs/DESIGN.md), [`docs/DATABASE.md`](docs/DATABASE.md), and
-[`docs/BUSINESS_LOGIC.md`](docs/BUSINESS_LOGIC.md) for the full design.
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DATABASE.md`](docs/DATABASE.md),
+[`docs/BUSINESS_LOGIC.md`](docs/BUSINESS_LOGIC.md), [`docs/API.md`](docs/API.md), and
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the full design and operations guide.
 
 ## Running locally
 

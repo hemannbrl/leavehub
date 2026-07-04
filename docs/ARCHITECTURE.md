@@ -1,4 +1,4 @@
-# leavehub — design
+# leavehub — architecture
 
 Leave & attendance management API. Employees request time off, managers approve, HR
 oversees policy. The deceptively tricky part is balance accounting and validation:
