@@ -15,7 +15,7 @@ htmlcov/
 .vscode/
 .DS_Store
 
-# docs: publish only the design docs the README links; keep everything else private
+
 docs/*
 !docs/DESIGN.md
 !docs/DATABASE.md
