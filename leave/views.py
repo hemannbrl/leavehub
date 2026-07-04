@@ -1,10 +1,17 @@
 from django.db import transaction
 from rest_framework import generics, mixins, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
-from .models import LeaveBalance, LeaveRequest
-from .permissions import role
-from .serializers import LeaveRequestSerializer, RegisterSerializer
+from .models import LeaveBalance, LeaveRequest, LeaveType, TransitionError
+from .permissions import IsHROrReadOnly, role
+from .serializers import (
+    LeaveBalanceSerializer,
+    LeaveRequestSerializer,
+    LeaveTypeSerializer,
+    RegisterSerializer,
+)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -40,3 +47,67 @@ class LeaveRequestViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
                 raise ValidationError("not enough balance")
             balance.pending += req.days
             balance.save()
+
+    @action(detail=True, methods=["post"])
+    def approve(self, request, pk=None):
+        req = self.get_object()
+        if role(request.user) not in ("manager", "hr"):
+            return Response({"detail": "not allowed"}, status=403)
+        try:
+            req.approve(actor=request.user)
+        except TransitionError as e:
+            return Response({"detail": str(e)}, status=400)
+        return Response(LeaveRequestSerializer(req).data)
+
+    @action(detail=True, methods=["post"])
+    def reject(self, request, pk=None):
+        req = self.get_object()
+        if role(request.user) not in ("manager", "hr"):
+            return Response({"detail": "not allowed"}, status=403)
+        try:
+            req.reject(actor=request.user, note=request.data.get("note", ""))
+        except TransitionError as e:
+            return Response({"detail": str(e)}, status=400)
+        return Response(LeaveRequestSerializer(req).data)
+
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+        req = self.get_object()
+        # only the owner or HR may cancel (a manager can see it but shouldn't withdraw it)
+        if req.employee_id != request.user.id and role(request.user) != "hr":
+            return Response({"detail": "not allowed"}, status=403)
+        try:
+            req.cancel()
+        except TransitionError as e:
+            return Response({"detail": str(e)}, status=400)
+        return Response(LeaveRequestSerializer(req).data)
+
+
+class MyBalancesView(generics.ListAPIView):
+    serializer_class = LeaveBalanceSerializer
+
+    def get_queryset(self):
+        return LeaveBalance.objects.filter(employee=self.request.user)
+
+
+class CalendarView(generics.ListAPIView):
+    serializer_class = LeaveRequestSerializer
+
+    def get_queryset(self):
+        qs = LeaveRequest.objects.filter(status="approved")
+        start = self.request.query_params.get("from")
+        end = self.request.query_params.get("to")
+        if start and end:
+            qs = qs.filter(start_date__lte=end, end_date__gte=start)
+        if role(self.request.user) == "hr":
+            return qs
+        team = self.request.user.profile.team
+        if not team:
+            return qs.none()              # no team set -> show nothing rather than everyone
+        return qs.filter(employee__profile__team=team)
+
+
+class LeaveTypeViewSet(viewsets.ModelViewSet):
+    queryset = LeaveType.objects.all()
+    serializer_class = LeaveTypeSerializer
+    permission_classes = [IsHROrReadOnly]

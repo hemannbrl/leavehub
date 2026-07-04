@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .calendar import working_days
-from .models import LeaveBalance, LeaveRequest
+from .models import LeaveBalance, LeaveRequest, LeaveType
 
 User = get_user_model()
 
@@ -56,3 +56,20 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
 
         data["days"] = days
         return data
+
+
+class LeaveBalanceSerializer(serializers.ModelSerializer):
+    remaining = serializers.ReadOnlyField()
+
+    class Meta:
+        model = LeaveBalance
+        fields = (
+            "id", "leave_type", "year",
+            "accrued", "used", "pending", "carried_over", "remaining",
+        )
+
+
+class LeaveTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LeaveType
+        fields = "__all__"
