@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -98,6 +99,19 @@ CSRF_COOKIE_SECURE = not DEBUG
 SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_HSTS_SECONDS", "0"))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
+
+# Cache — shared across gunicorn workers so DRF throttle counters are global,
+# not per-process. The database backend needs `python manage.py createcachetable`
+# once per environment. Tests use local memory.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
+    }
+}
+if "test" in sys.argv:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 
 REST_FRAMEWORK = {
