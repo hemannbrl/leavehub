@@ -1,5 +1,10 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
+from django.utils import timezone
+
+
+class TransitionError(Exception):
+    pass
 
 
 class Profile(models.Model):
@@ -83,3 +88,47 @@ class LeaveRequest(models.Model):
     decided_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def _balance(self):
+        return LeaveBalance.objects.select_for_update().get(
+            employee=self.employee, leave_type=self.leave_type, year=self.start_date.year
+        )
+
+    def approve(self, actor):
+        if self.status != "pending":
+            raise TransitionError("only pending requests can be approved")
+        with transaction.atomic():
+            bal = self._balance()
+            bal.pending -= self.days
+            bal.used += self.days
+            bal.save()
+            self.status = "approved"
+            self.approver = actor
+            self.decided_at = timezone.now()
+            self.save()
+
+    def reject(self, actor, note=""):
+        if self.status != "pending":
+            raise TransitionError("only pending requests can be rejected")
+        with transaction.atomic():
+            bal = self._balance()
+            bal.pending -= self.days
+            bal.save()
+            self.status = "rejected"
+            self.approver = actor
+            self.decision_note = note
+            self.decided_at = timezone.now()
+            self.save()
+
+    def cancel(self):
+        if self.status not in ("pending", "approved"):
+            raise TransitionError("cannot cancel this request")
+        with transaction.atomic():
+            bal = self._balance()
+            if self.status == "approved":
+                bal.used -= self.days
+            else:
+                bal.pending -= self.days
+            bal.save()
+            self.status = "cancelled"
+            self.save()
