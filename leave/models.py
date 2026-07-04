@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
@@ -53,7 +55,7 @@ class LeaveBalance(models.Model):
         unique_together = ("employee", "leave_type", "year")
 
     @property
-    def remaining(self):
+    def remaining(self) -> Decimal:
         return self.accrued + self.carried_over - self.used - self.pending
     
 class Holiday(models.Model):

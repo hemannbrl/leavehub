@@ -93,3 +93,22 @@ GET    /api/docs/                         Swagger UI
 ```
 
 ## What I Learned
+
+- **The balance is the thing to protect.** Every status change moves numbers between
+  `pending`, `used`, and back, and those moves have to stay consistent with `status`. Keeping
+  the transitions as methods on `LeaveRequest` — rather than scattering the arithmetic across
+  views — meant there was exactly one place where a balance could change, which made it
+  possible to reason about correctness at all.
+- **Validation alone doesn't prevent over-booking.** The serializer checks `remaining` without
+  a lock, so two requests submitted at once can both pass. The real guard is re-checking under
+  `select_for_update()` inside `perform_create`'s transaction; that row lock (Postgres-only,
+  inside a transaction) is what actually stops two people spending the same last day.
+- **Compute derived values on the server, never trust the client.** `days` comes from the
+  `working_days()` helper — weekends and holidays excluded — not from anything the request
+  sends. Isolating that as a pure function made it easy to test hard, which mattered because
+  everything downstream leans on it.
+- **Empty defaults are a real leak.** Filtering the team calendar on a blank `team` would have
+  matched every other user with a blank team; returning nothing when `team` is unset was the
+  safe default.
+- **Some jobs don't belong in the request cycle.** Accrual and carry-over are periodic, not
+  user-triggered, so they're management commands run by cron — no Celery needed for this scope.
