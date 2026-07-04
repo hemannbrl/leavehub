@@ -57,3 +57,29 @@ class Holiday(models.Model):
 
     def __str__(self):
         return f"{self.date} {self.name}"
+
+
+class LeaveRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+        CANCELLED = "cancelled", "Cancelled"
+
+    employee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="leave_requests"
+    )
+    leave_type = models.ForeignKey(LeaveType, on_delete=models.PROTECT)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    days = models.DecimalField(max_digits=5, decimal_places=2)
+    reason = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    approver = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="leave_decisions",
+    )
+    decision_note = models.TextField(blank=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
