@@ -14,15 +14,17 @@ authorization rules, are the heart of the project.
 
 ## Web UI
 
-Served at `/`: a dashboard with balances and KPIs, a requests view with a detail/decision
-modal (showing the reason before you approve/reject), a month-grid team calendar, a team
-roster, and HR leave-type management. Run it locally to see it (below).
+A small vanilla-JS client served at `/` — dashboard, requests with a detail/decision modal,
+a month-grid team calendar, a team roster, and HR leave-type management. No build step.
 
-<!-- Add PNGs to docs/screenshots/ and uncomment:
+**Dashboard** — balances and at-a-glance KPIs
 ![Dashboard](docs/screenshots/dashboard.png)
-![Requests + decision modal](docs/screenshots/requests.png)
+
+**Reviewing a request** — the reason is shown before you approve or reject
+![Request detail and decision](docs/screenshots/requests.png)
+
+**Team calendar** — approved leave on a month grid (managers and HR)
 ![Team calendar](docs/screenshots/calendar.png)
--->
 
 
 ## Features
@@ -175,4 +177,8 @@ and `carry_over` (year end) via cron — see `deploy/crontab.example`.
   never the client — which made it easy to test hard, since everything downstream leans on it.
 - **Some jobs don't belong in the request cycle.** Accrual and carry-over are periodic, so
   they're management commands on a schedule — no Celery needed for this scope.
+
+## License
+
+Released under the [MIT License](LICENSE).
 ```
