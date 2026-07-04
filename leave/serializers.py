@@ -21,10 +21,17 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LeaveRequestSerializer(serializers.ModelSerializer):
+    employee_username = serializers.CharField(source="employee.username", read_only=True)
+    leave_type_name = serializers.CharField(source="leave_type.name", read_only=True)
+    approver_username = serializers.SerializerMethodField()
+
     class Meta:
         model = LeaveRequest
         fields = "__all__"
         read_only_fields = ("employee", "days", "status", "approver", "decided_at")
+
+    def get_approver_username(self, obj) -> str | None:
+        return obj.approver.username if obj.approver_id else None
 
     def validate(self, data):
         if data["start_date"] > data["end_date"]:
@@ -63,12 +70,14 @@ class LeaveRequestSerializer(serializers.ModelSerializer):
 
 class LeaveBalanceSerializer(serializers.ModelSerializer):
     remaining = serializers.ReadOnlyField()
+    leave_type_name = serializers.CharField(source="leave_type.name", read_only=True)
 
     class Meta:
         model = LeaveBalance
         fields = (
             "id",
             "leave_type",
+            "leave_type_name",
             "year",
             "accrued",
             "used",
@@ -82,3 +91,36 @@ class LeaveTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = LeaveType
         fields = "__all__"
+
+
+class MeSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    role = serializers.SerializerMethodField()
+    team = serializers.SerializerMethodField()
+
+    def get_role(self, obj) -> str | None:
+        return getattr(getattr(obj, "profile", None), "role", None)
+
+    def get_team(self, obj) -> str:
+        return getattr(getattr(obj, "profile", None), "team", "")
+
+
+class EmployeeSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    role = serializers.SerializerMethodField()
+    team = serializers.SerializerMethodField()
+    manager = serializers.SerializerMethodField()
+
+    def get_role(self, obj) -> str | None:
+        return getattr(getattr(obj, "profile", None), "role", None)
+
+    def get_team(self, obj) -> str:
+        return getattr(getattr(obj, "profile", None), "team", "")
+
+    def get_manager(self, obj) -> str | None:
+        mgr = getattr(getattr(obj, "profile", None), "manager", None)
+        return mgr.username if mgr else None

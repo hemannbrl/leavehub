@@ -41,11 +41,16 @@ class TransitionTests(TestCase):
         self.assertEqual(self.bal.pending, 0)
         self.assertEqual(self.bal.used, 0)
 
-    def test_cancel_approved_restores_used(self):
-        self.req.approve(actor=self.manager)
+    def test_cancel_pending_releases_pending(self):
         self.req.cancel()
         self.bal.refresh_from_db()
-        self.assertEqual(self.bal.used, 0)
+        self.assertEqual(self.req.status, "cancelled")
+        self.assertEqual(self.bal.pending, 0)
+
+    def test_cannot_cancel_approved(self):
+        self.req.approve(actor=self.manager)
+        with self.assertRaises(TransitionError):
+            self.req.cancel()
 
     def test_cannot_approve_twice(self):
         self.req.approve(actor=self.manager)

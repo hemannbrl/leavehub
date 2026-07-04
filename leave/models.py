@@ -144,14 +144,13 @@ class LeaveRequest(models.Model):
             self.save()
 
     def cancel(self):
-        if self.status not in ("pending", "approved"):
-            raise TransitionError("cannot cancel this request")
+        # A request can only be withdrawn while still pending; once approved or
+        # rejected it is final.
+        if self.status != "pending":
+            raise TransitionError("only pending requests can be cancelled")
         with transaction.atomic():
             bal = self._balance()
-            if self.status == "approved":
-                bal.used -= self.days
-            else:
-                bal.pending -= self.days
+            bal.pending -= self.days
             bal.save()
             self.status = "cancelled"
             self.save()
