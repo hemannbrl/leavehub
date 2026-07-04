@@ -50,3 +50,10 @@ class LeaveBalance(models.Model):
     @property
     def remaining(self):
         return self.accrued + self.carried_over - self.used - self.pending
+    
+class Holiday(models.Model):
+    date = models.DateField(unique=True)
+    name = models.CharField(max_length=80)
+
+    def __str__(self):
+        return f"{self.date} {self.name}"
