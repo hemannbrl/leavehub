@@ -42,15 +42,16 @@ roster, and HR leave-type management. Run it locally to see it (below).
 ## Roles & permissions
 
 | Action | Employee | Manager | HR |
-|--------|:--------:|:-------:|:--:|
-| Request leave | ✅ own | ✅ own | ✅ own |
-| See requests | own | reports' + own | all |
-| Approve / reject | ❌ | reports' ¹ | anyone ¹ |
-| Cancel (pending only) | ✅ own | ✅ own | ✅ own |
-| Team calendar / roster | ❌ | ✅ team | ✅ all |
-| Manage leave types | ❌ | ❌ | ✅ |
+|--------|----------|---------|----|
+| Request leave | own | own | own |
+| See requests | own | own + team | all |
+| Approve / reject | no | team | anyone |
+| Cancel (while pending) | own | own | own |
+| Team calendar & roster | no | team | all |
+| Manage leave types | no | no | yes |
 
-¹ Never your own request.
+Approve/reject never applies to your own request — so an HR's request is decided by
+another HR.
 
 ## Tech stack
 
