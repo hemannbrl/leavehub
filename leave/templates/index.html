@@ -339,6 +339,14 @@ function renderAuth() {
   };
   submitBtn.addEventListener("click", submit);
   p.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+  const demoRow = el("div", { class: "tabrow", style: "margin-top:8px" },
+    [["hannah", "HR"], ["mike", "manager"], ["evan", "employee"]].map(([un, role]) =>
+      el("button", {
+        onclick: async () => {
+          try { await login(un, "leavehub123"); toast(`Signed in as ${un}`); }
+          catch (e) { toast(e.message, false); }
+        },
+      }, `${un} · ${role}`)));
   $("#app-root").innerHTML = "";
   $("#app-root").append(el("div", { class: "authwrap" }, el("section", { class: "card authcard" }, [
     el("div", { class: "brand" }, [el("span", { class: "logo" }, "L"), "leavehub"]),
@@ -347,6 +355,9 @@ function renderAuth() {
     el("label", {}, "Username"), u,
     el("label", {}, "Password"), p,
     submitBtn,
+    el("p", { class: "muted", style: "text-align:center;margin:16px 0 6px;font-size:12px" },
+      "Demo accounts — one click signs you in"),
+    demoRow,
   ])));
 }
 
