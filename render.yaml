@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: leavehub
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/v1/schema/
+    dockerCommand: sh deploy/render-start.sh
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: POSTGRES_SSLMODE
+        value: require
+      - key: SEED_ON_BOOT
+        value: "true"
+      # Set these in the Render dashboard (Neon values):
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_DB
+        sync: false
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false

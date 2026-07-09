@@ -66,6 +66,22 @@ DJANGO_DEBUG=False python manage.py check --deploy
 
 The API is versioned (`/api/v1/`), paginated, and throttled out of the box.
 
+## Free-tier deployment (Render + Neon)
+
+The public demo runs on free tiers:
+
+- **Web** — Render free web service from `render.yaml` (Docker; `deploy/render-start.sh`
+  migrates, creates the cache table, collects static, reseeds the demo org when
+  `SEED_ON_BOOT=true`, then runs gunicorn). Render's hostname is trusted automatically
+  via `RENDER_EXTERNAL_HOSTNAME`.
+- **Postgres** — Neon (`POSTGRES_SSLMODE=require`).
+- **Scheduled jobs** — accrual is monthly and carry-over yearly, so on the free demo
+  they're run by hand when needed (`python manage.py accrue_leave`); on real
+  infrastructure use the crontab above.
+
+Free-tier behavior: the instance sleeps when idle (first request takes ~30s) and the
+demo org reseeds on each boot.
+
 ## CI
 
 `.github/workflows/ci.yml` runs ruff lint + format check, migrations, and the test
