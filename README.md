@@ -2,6 +2,10 @@
 
 ![CI](https://github.com/hemannbrl/leavehub/actions/workflows/ci.yml/badge.svg)
 
+**Live demo:** https://leavehub.onrender.com — log in as `hannah` / `leavehub123` (HR)
+or `mike` / `leavehub123` (manager). Runs on a free instance that sleeps when idle, so
+the first load can take ~30 seconds; demo data resets on every boot.
+
 A leave & attendance management app — employees request time off against a balance, managers
 approve or reject, and HR configures policy. Built as a **JWT-secured Django REST API**
 (`/api/v1/`, versioned, paginated, rate-limited) with a small **vanilla-JS single-page UI**
