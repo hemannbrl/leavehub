@@ -3,7 +3,7 @@ services:
     name: leavehub
     runtime: docker
     plan: free
-    healthCheckPath: /api/v1/schema/
+    healthCheckPath: /healthz/
     dockerCommand: sh deploy/render-start.sh
     envVars:
       - key: DJANGO_SECRET_KEY
