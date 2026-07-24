@@ -82,15 +82,17 @@ carry-over run outside the request cycle as management commands. See
 
 ## Running locally
 
-Requires PostgreSQL. Start one with `docker compose up -d`.
+Runs on SQLite out of the box — no database server needed. To use PostgreSQL instead,
+start one with `docker compose up -d` and set the `POSTGRES_*` vars in `.env`.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-cp .env.example .env          # set DJANGO_SECRET_KEY and POSTGRES_PASSWORD
+cp .env.example .env          # works as-is for local dev (SQLite)
 
 python manage.py migrate
+python manage.py createcachetable   # throttle counters live in a DB cache table
 python manage.py seed_demo    # loads a demo org: users, types, balances, sample requests
 python manage.py runserver
 ```

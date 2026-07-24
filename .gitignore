@@ -20,10 +20,6 @@ docs/*
 !docs/ARCHITECTURE.md
 !docs/DATABASE.md
 !docs/BUSINESS_LOGIC.md
-<<<<<<< HEAD
-!docs/screenshots/
-=======
 !docs/API.md
 !docs/DEPLOYMENT.md
 !docs/screenshots/
->>>>>>> 20aa981 (restructure docs into architecture, api, and deployment guides)
